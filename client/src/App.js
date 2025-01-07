@@ -63,7 +63,7 @@ function ChipButton({ isTracking, toggleTracking }) {
           width: '120px',
           height: '120px',
           transform: `rotate(${isTracking ? '-90deg' : '0deg'})`,
-          backgroundImage: 'url(/chip2.png)',
+          backgroundImage: 'url(/white_chip.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           borderRadius: '50%',
@@ -77,30 +77,25 @@ function ChipButton({ isTracking, toggleTracking }) {
 
 function App() {
 
-  const [data, setData] = useState({})
+  const [status, setStatus] = useState({})
   const [isTracking, setIsTracking] = useState(false);
 
   useEffect(() => {
-    fetch('/members')
-      .then((res) => {
+    fetch('http://127.0.0.1:5000/detect')
+    .then((res) => {
         if (!res.ok) {
           throw new Error('Network response was not ok');
         }
-        return res.text();
+        return res.json();
       })
       .then((data) => {
-        try {
-          const jsonData = JSON.parse(data);
-          setData(jsonData);
-          console.log(jsonData);
-        } catch (error) {
-          console.error('Failed to parse JSON:', error);
-        }
+        setStatus(data);
+        console.log(data);
       })
       .catch((error) => {
         console.error('Error fetching data:', error);
       });
-  }, []);
+  }, []);  
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
@@ -113,6 +108,9 @@ function App() {
       onMouseDown={(e) => {
         if (!e.target.closest('button')) {
           greetingAudio.play();
+        }
+        if (status) {
+          console.log(status.status)
         }
       }}
       style={{
