@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import { NotificationContainer, NotificationManager } from 'react-notifications';
 
 function ChipButton({ isTracking, toggleTracking }) {
 
-  var endingAudio = new Audio("/satisfied.m4a");
+  var endingAudio = new Audio(process.env.PUBLIC_URL + "/satisfied.m4a");
   endingAudio.volume = 1;
 
   return (
@@ -77,40 +78,66 @@ function ChipButton({ isTracking, toggleTracking }) {
 
 function App() {
 
-  const [status, setStatus] = useState({})
   const [isTracking, setIsTracking] = useState(false);
+  const [isDrowsy, setIsDrowsy] = useState(false);
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
 
   useEffect(() => {
-    fetch('http://127.0.0.1:5000/detect')
-    .then((res) => {
-        if (!res.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return res.json();
-      })
-      .then((data) => {
-        setStatus(data);
-        console.log(data);
-      })
-      .catch((error) => {
-        console.error('Error fetching data:', error);
+    if (isTracking) {
+      fetch(`${apiUrl}/webcam`, {
+        mode: 'no-cors',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch(error => {
+        console.error('Error fetching webcam data:', error);
       });
-  }, []);  
+    } else {
+      fetch(`${apiUrl}/stop_webcam`, {
+        mode: 'no-cors',
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }).catch(error => {
+        console.error('Error stopping webcam:', error);
+      });
+    }
+  }, [isTracking, apiUrl]);
+
+  useEffect(() => {
+    const checkDrowsiness = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/check_drowsiness`);
+        const data = await response.json();
+        setIsDrowsy(data.is_drowsy);
+        if (data.is_drowsy) {
+          NotificationManager.warning('You seem drowsy! Please stay alert!', 'Drowsiness Alert', 5000);
+        }
+      } catch (error) {
+        console.error('Error fetching drowsiness status:', error);
+      }
+    };
+
+    if (isTracking) {
+      const interval = setInterval(checkDrowsiness, 3000);
+      return () => clearInterval(interval);
+    }
+
+  }, [isTracking, apiUrl]);
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
   };
 
-  var greetingAudio = new Audio("/greeting.m4a");
+  var greetingAudio = new Audio(process.env.PUBLIC_URL + "/greeting.m4a");
 
   return (
     <div
       onMouseDown={(e) => {
         if (!e.target.closest('button')) {
           greetingAudio.play();
-        }
-        if (status) {
-          console.log(status.status)
         }
       }}
       style={{
@@ -142,6 +169,8 @@ function App() {
           }
         `}
       </style>
+
+      {isDrowsy ? <NotificationContainer /> : null}
 
       <div
         style={{
@@ -190,25 +219,19 @@ function App() {
           <div
             style={{
               position: 'absolute',
-              bottom: '20px',
+              bottom: '-400px',
               left: '50%',
               transform: 'translateX(-50%)',
+              boxShadow: '0 0 20px rgba(169, 169, 169, 0)',
+              filter: 'drop-shadow(0 0 10px rgba(169, 169, 169, 0.8))',
               transition: 'all 1s ease',
             }}
           >
-            <video
-              autoPlay
-              muted
-              width="320"
-              height="240"
-              style={{
-                borderRadius: '10px',
-                boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)',
-              }}
-            >
-              <source src="/webcam-feed.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            <img
+              src={`${process.env.REACT_APP_API_URL}/webcam`}
+              alt="Webcam Feed"
+              style={{ width: '450px', height: 'auto', borderRadius: '10px' }}
+            />
           </div>
         )}
       </div>
