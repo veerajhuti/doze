@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import { NotificationContainer, NotificationManager } from 'react-notifications';
 
 function ChipButton({ isTracking, toggleTracking }) {
@@ -80,12 +80,11 @@ function App() {
 
   const [isTracking, setIsTracking] = useState(false);
   const [isDrowsy, setIsDrowsy] = useState(false);
-  const apiUrl = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000';
+  const apiUrl = 'http://127.0.0.1:5000';
 
   useEffect(() => {
     if (isTracking) {
       fetch(`${apiUrl}/webcam`, {
-        mode: 'no-cors',
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +94,6 @@ function App() {
       });
     } else {
       fetch(`${apiUrl}/stop_webcam`, {
-        mode: 'no-cors',
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -107,25 +105,31 @@ function App() {
   }, [isTracking, apiUrl]);
 
   useEffect(() => {
-    const checkDrowsiness = async () => {
-      try {
-        const response = await fetch(`${apiUrl}/check_drowsiness`);
-        const data = await response.json();
-        setIsDrowsy(data.is_drowsy);
-        if (data.is_drowsy) {
-          NotificationManager.warning('You seem drowsy! Please stay alert!', 'Drowsiness Alert', 5000);
-        }
-      } catch (error) {
-        console.error('Error fetching drowsiness status:', error);
-      }
-    };
-
     if (isTracking) {
-      const interval = setInterval(checkDrowsiness, 3000);
-      return () => clearInterval(interval);
-    }
-
-  }, [isTracking, apiUrl]);
+      fetch(`${apiUrl}/check_drowsiness`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Drowsiness data:', data.is_drowsy);
+          setIsDrowsy(data.is_drowsy);
+          if (data.is_drowsy) {
+            NotificationManager.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 5000);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching webcam data:', error);
+        });
+      }
+}, [isTracking, apiUrl]);  
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
@@ -228,8 +232,8 @@ function App() {
             }}
           >
             <img
-              src={`${process.env.REACT_APP_API_URL}/webcam`}
-              alt="Webcam Feed"
+              src={`${apiUrl}/webcam`}
+              alt=""
               style={{ width: '450px', height: 'auto', borderRadius: '10px' }}
             />
           </div>
@@ -240,4 +244,4 @@ function App() {
   );
 }
 
-export default App
+export default App;

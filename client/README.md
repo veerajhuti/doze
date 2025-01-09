@@ -1,70 +1,43 @@
-# Getting Started with Create React App
+# Baymax AI
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Overview
 
-## Available Scripts
+**Baymax AI** is a personal project inspired by the character Baymax from *Big Hero 6*. This app detects prolonged eye closure using real-time webcam footage, a potential sign of sleep apnea or fatigue. When prolonged eye closure is detected, the application alerts the user. 
 
-In the project directory, you can run:
+This app aims to improve personal health monitoring by providing a fun, interactive way to keep track of eye closure and alertness. It’s an opportunity to explore computer vision, machine learning, and AI principles, specifically applied in healthcare-related applications.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## How It Works
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+The application uses OpenCV to process webcam footage and detect eye closure in real-time using the Eye Aspect Ratio (EAR). The EAR compares the vertical and horizontal distances of eye landmarks to determine whether the user’s eyes are open or closed.
 
-### `npm test`
+### Example Diagram
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+![Eye Aspect Ratio Calculation](https://example.com/path-to-image.jpg)  
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Future Expansions
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Health Tips Integration - For future versions, we can integrate Healthline API or similar resources to provide personalized health tips based on detected eye closure and fatigue.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Wearable Device Integration -  Integrating with wearable devices (like fitness trackers) to get a more holistic view of the user’s sleep patterns, movement, and fatigue levels.
 
-### `npm run eject`
+3. Physical Baymax Assistant - Create a physical Baymax robot using Arduino with LEDs and servo motors. The robot could react to eye closure events, such as blinking its lights or waving its arms to alert the user.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+4. Real-Time Data Scraping - Integrating a feature that pulls real-time health information, research papers, or tips based on current health concerns, such as fatigue or sleep apnea.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## References
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. [Eye Aspect Ratio (EAR) for Blink Detection](https://www.mdpi.com/2079-9292/11/19/3183)
 
-## Learn More
+2. [Sleep Apnea Detection and Technology](https://www.sciencedirect.com/science/article/pii/S2667241322000039)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Author
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+[Veera Jhuti](https://github.com/veerajhuti)
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

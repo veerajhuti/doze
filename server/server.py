@@ -1,5 +1,5 @@
-from flask import Flask, Response
-from flask_cors import CORS
+from flask import Flask, Response, jsonify
+from flask_cors import CORS, cross_origin
 import cv2 as cv
 import numpy as np
 import dlib
@@ -7,7 +7,7 @@ from scipy.spatial import distance
 from imutils import face_utils
 
 app = Flask(__name__)
-CORS(app, origins=["https://veerajhuti.github.io"])
+CORS(app)
 
 # global variables
 
@@ -32,10 +32,8 @@ def eye_aspect_ratio(eye):
     return ratio
 
 def webcam_display():
-    global live_video
+    global live_video, is_tracking, is_drowsy, duration
     while True:
-
-# face is being tracked
         if is_tracking:
             if live_video is None:
                 live_video = cv.VideoCapture(0)
@@ -78,10 +76,7 @@ def webcam_display():
             if ret:
                 frame_bytes = jpeg.tobytes()
                 yield (b'--frame\r\n'
-                       b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-
-# face is not being tracked
-
+                        b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
         else:
             if live_video is not None:
                 live_video.release()
@@ -89,21 +84,24 @@ def webcam_display():
             yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'  # empty frame  
 
 @app.route('/webcam')
+@cross_origin(origin='*')
 def start_tracking():
     global is_tracking
     is_tracking = True
     return Response(webcam_display(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/stop_webcam')
+@cross_origin(origin='*')
 def stop_tracking():
     global is_tracking
     is_tracking = False
     return Response(webcam_display(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/check_drowsiness')
+@cross_origin(origin='*')
 def check_drowsiness():
     global is_drowsy
     return jsonify({"is_drowsy": is_drowsy})
-    
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host='127.0.0.1', port=5000)
