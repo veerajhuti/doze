@@ -119,22 +119,7 @@ def validate():
   return loss, accuracy * 100
 
       
-# main training loop
-train_losses, valid_losses = [], []
-train_accuracies, valid_accuracies = [], []
-
-for epoch in range(epochs):
-  print('Epoch: {}'.format(epoch))
-  train_loss, train_acc = train()
-  valid_loss, valid_acc = validate()
-
-  train_losses.append(train_loss)
-  valid_losses.append(valid_loss)
-  train_accuracies.append(train_acc)
-  valid_accuracies.append(valid_acc)
-
-
-def plot():
+def plot(train_accuracies, valid_accuracies, train_losses, valid_losses):
   plt.figure(figsize=(12, 5))
 
   # accuracy plot
@@ -157,5 +142,23 @@ def plot():
 
   plt.tight_layout()
   plt.show()
+  
+# main training loop
 
-plot()
+if __name__ == "__main__":
+  model = NeuralNetwork()
+
+  train_losses, valid_losses = [], []
+  train_accuracies, valid_accuracies = [], []
+
+  for epoch in range(epochs):
+    print('Epoch: {}'.format(epoch))
+    train_loss, train_acc = train()
+    valid_loss, valid_acc = validate()
+
+    train_losses.append(train_loss)
+    valid_losses.append(valid_loss)
+    train_accuracies.append(train_acc)
+    valid_accuracies.append(valid_acc)
+
+  plot(train_accuracies, valid_accuracies, train_losses, valid_losses)
