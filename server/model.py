@@ -46,20 +46,20 @@ class NeuralNetwork(nn.Module):
       nn.Conv2d(25, 50, kernel_size, stride=1, padding=1), # 50 x 14 x 14
       nn.BatchNorm2d(50),
       nn.ReLU(),
-      nn.Dropout(.2),
+      nn.Dropout(.3),
       nn.MaxPool2d(2, stride=2), # 50 x 7 x 7
       
       nn.Conv2d(50, 75, kernel_size, stride=1, padding=1), # 75 x 7 x 7
       nn.BatchNorm2d(75),
       nn.ReLU(),
-      nn.Dropout(.2),
+      nn.Dropout(.3),
       nn.MaxPool2d(2, stride=2), # 75 x 3 x 3
     )
     
     self.fc_layer = nn.Sequential(
       nn.Flatten(),
       nn.Linear(flattened_img_size, 512),
-      nn.Dropout(0.3),
+      nn.Dropout(0.5),
       nn.ReLU(),
       nn.Linear(512, n_classes)
     )
@@ -73,17 +73,26 @@ model = NeuralNetwork()
 
 # training loop
 
-epochs = 8
+epochs = 20
 loss_func = nn.CrossEntropyLoss()
-optimizer = Adam(model.parameters())
+optimizer = Adam(model.parameters(), lr = 0.0001)
 
 def get_batch_accuracy(output, y, N):
   pred = output.argmax(dim=1, keepdim=True) # getting highest score
   correct = pred.eq(y.view_as(pred)).sum().item() # using label
-  return correct / N
+  return correct / len(y)
 
+
+# the old batch caclulations assumed all batches had the same size
+# this is somewhat true, we regularize the batch sizes as 32 at the top
+# but if we have an amount of data that isn't divisble by 32, the last batch may be some other number rather than 32
+# so we need to scale the batches by their weights when calculating average loss
+ 
+ 
 def train():
-  loss = 0
+  total_loss = 0.0
+  total_correct = 0
+  total_samples = 0.0
   accuracy = 0
   
   model.train()
@@ -95,28 +104,44 @@ def train():
     batch_loss.backward() # back propogate
     optimizer.step()
     
-    loss += batch_loss.item()
-    accuracy += get_batch_accuracy(output, y, train_N)
+    batch_size = len(y)
+    total_loss += batch_loss.item() * batch_size
+    predictions = output.argmax(dim=1) # class with highest score
+    
+    total_correct += (predictions == y).sum().item() # sum correct predictions then turn into normal item
+    total_samples += batch_size
+
+  avg_loss = total_loss / total_samples
+  avg_acc = total_correct / total_samples
   
-  print('Train minus Loss: {:.4f} Accuracy: {:.4f}'.format(loss, accuracy * 100))
-  return loss, accuracy * 100
+  print(f'Train Loss: {avg_loss:.4f}, Accuracy: {avg_acc*100:.2f}%')
+  return avg_loss, avg_acc * 100
     
     
 def validate():
-  loss = 0
-  accuracy = 0
-  
+  total_loss = 0.0
+  total_correct = 0
+  total_samples = 0
+    
   model.eval()
   
   with torch.no_grad():
     for x, y in valid_loader:
       output = model(x)
+      batch_loss = loss_func(output, y)
       
-      loss += loss_func(output, y).item()
-      accuracy += get_batch_accuracy(output, y, valid_N)
+      batch_size = len(y)
+      total_loss += batch_loss.item() * batch_size
+      predictions = output.argmax(dim=1)
       
-  print('Valid minus Loss: {:.4f} Accuracy: {:.4f}'.format(loss, accuracy * 100))
-  return loss, accuracy * 100
+      total_correct += (predictions == y).sum().item()
+      total_samples += batch_size
+      
+  avg_loss = total_loss / total_samples
+  avg_acc = total_correct / total_samples
+  
+  print(f'Valid Loss: {avg_loss:.4f}, Accuracy: {avg_acc*100:.2f}%')
+  return avg_loss, avg_acc * 100
 
       
 def plot(train_accuracies, valid_accuracies, train_losses, valid_losses):
@@ -149,7 +174,9 @@ if __name__ == "__main__":
   model = NeuralNetwork()
 
   train_losses, valid_losses = [], []
-  train_accuracies, valid_accuracies = [], []
+  train_accuracies, valid_accuracies = [], [] 
+
+  best_val_acc = 0.0
 
   for epoch in range(epochs):
     print('Epoch: {}'.format(epoch))
@@ -161,4 +188,8 @@ if __name__ == "__main__":
     train_accuracies.append(train_acc)
     valid_accuracies.append(valid_acc)
 
+    if valid_acc > best_val_acc:
+      best_val_acc = valid_acc
+      torch.save(model.state_dict(), 'best_model.pth')
+    
   plot(train_accuracies, valid_accuracies, train_losses, valid_losses)
