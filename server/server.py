@@ -170,7 +170,7 @@ def webcam_display():
         model_drowsy_score -= 1
 
       model_drowsy_score = max(model_drowsy_min, min(model_drowsy_score, model_drowsy_max))
-      print(f"Prediction: {prediction}, Confidence: {confidence:.2f}, Score: {model_drowsy_score}")
+      # print(f"Prediction: {prediction}, Confidence: {confidence:.2f}, Score: {model_drowsy_score}")
 
       model_dec = model_drowsy_score >= model_drowsy_threshold
       is_drowsy = model_dec or ear_dec

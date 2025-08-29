@@ -1,86 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { NotificationContainer, NotificationManager } from 'react-notifications';
-
-function ChipButton({ isTracking, toggleTracking }) {
-
-  var endingAudio = new Audio(process.env.PUBLIC_URL + "/satisfied.m4a");
-  endingAudio.volume = 1;
-
-  return (
-    <div
-      style={{
-        position: 'absolute',
-        bottom: '20px',
-        right: '20px',
-        display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-start',
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'flex-end',
-          marginRight: '20px',
-        }}
-      >
-        <div
-          style={{
-            color: 'white',
-            font: '700 24px/1 "Roboto", sans-serif',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            letterSpacing: '2px',
-            textTransform: 'uppercase',
-            marginBottom: '8px',
-            textShadow: '0 0 5px rgba(255, 255, 255, 0.8), 0 0 10px rgba(255, 255, 255, 0.6), 0 0 15px rgba(255, 255, 255, 0.4)',
-          }}
-        >
-          {isTracking ? 'Stop Tracking' : 'Start Tracking'}
-        </div>
-
-        <div
-          style={{
-            width: '200px',
-            height: '2px',
-            background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2))',
-            margin: '0 auto',
-            boxShadow: '0 0 8px rgba(255, 255, 255, 1), 0 0 20px rgba(255, 255, 255, 0.8)',
-          }}
-        />
-      </div>
-
-      <button
-        onClick={() => {
-          toggleTracking();
-          if (isTracking) {
-            endingAudio.play();
-          }
-        }}
-        style={{
-          border: 'none',
-          width: '120px',
-          height: '120px',
-          transform: `rotate(${isTracking ? '-90deg' : '0deg'})`,
-          backgroundImage: 'url(/white_chip.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          borderRadius: '50%',
-          filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 1))',
-          boxShadow: '0 0 15px rgba(255, 255, 255, 0.8)',
-        }}
-      />
-    </div>
-  );
-}
+import { ToastContainer, toast } from 'react-toastify';
+import Button from '@mui/joy/Button';
 
 function App() {
 
   const [isTracking, setIsTracking] = useState(false);
   const [isDrowsy, setIsDrowsy] = useState(false);
   const apiUrl = 'http://localhost:4000';
+  const alarm_sound = new Audio(process.env.PUBLIC_URL + "/alarm-clock-short-6402.mp3");
 
   useEffect(() => {
     if (isTracking) {
@@ -122,124 +49,180 @@ function App() {
           console.log('Drowsiness data:', data.is_drowsy);
           setIsDrowsy(data.is_drowsy);
           if (data.is_drowsy) {
-            NotificationManager.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 5000);
+            alarm_sound.play();
+            toast.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 5000);
           }
         })
         .catch(error => {
           console.error('Error fetching webcam data:', error);
         });
       }
-}, [isTracking, apiUrl]);  
+}, [isTracking, apiUrl, alarm_sound]);  
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
   };
 
-  var greetingAudio = new Audio(process.env.PUBLIC_URL + "/greeting.m4a");
-
   return (
-    <div
-      onMouseDown={(e) => {
-        if (!e.target.closest('button')) {
-          greetingAudio.play();
-        }
-      }}
+    <div style={{ position: 'relative', height: '100vh', overflow: 'hidden' }}>
+    
+    <ToastContainer />
+   
+    <video
+      autoPlay
+      muted
+      loop
+      playsInline
       style={{
-        position: 'absolute',
+        position: 'fixed',
         top: 0,
         left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'radial-gradient(circle at center, #fff, #fff 50%, #aaa)',
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        margin: 0,
-        padding: 0,
-        transition: 'all 1s ease',
+        width: '100vw',
+        height: '120vh',
+        zIndex: -1,
+        objectFit: 'fill',
+        filter: 'blur(3px)',
       }}
     >
-      <style>
-        {`
-          @keyframes smile {
-            0%, 50% {
-              background-position: 0 0;
-            }
-            85%, 95% {
-              background-position: 0 30%;
-            }
-            100% {
-              background-position: 0 0;
-            }
-          }
-        `}
-      </style>
+    <source src={process.env.PUBLIC_URL + '/gif.mp4'} type="video/mp4" />
+    Your browser does not support the video tag.
+  </video>
 
-      {isDrowsy ? <NotificationContainer /> : null}
-
+    {isTracking && (
       <div
         style={{
-          borderBottom: '1.5em solid #000',
           position: 'absolute',
           top: '50%',
           left: '50%',
-          width: '50%',
-          transform: isTracking ? 'translate(-50%, -900%)' : 'translate(-50%, -40%)',
-          transition: 'all 1s ease',
+          transform: 'translate(-50%, -50%)',
+          boxShadow: '0 0 20px rgba(169, 169, 169, 0.5)',
+          filter: 'drop-shadow(0 0 10px rgba(169, 169, 169, 0.8))',
+          borderRadius: '10px',
+          zIndex: 20,
+          width: '450px',
+          height: 'auto',
         }}
       >
-        <div
-          style={{
-            animation: 'smile 6s infinite',
-            background: 'linear-gradient(to top, #efefef, #efefef 50%, #000 50%, #000)',
-            backgroundPosition: '0 0',
-            backgroundSize: '200% 200%',
-            borderRadius: '50%',
-            position: 'absolute',
-            width: '12em',
-            height: '12em',
-            left: '-9em',
-            top: '-6em',
-            transform: 'skewX(-4deg)',
-            transition: 'all 1s ease',
-          }}
+        <img
+          src={`${apiUrl}/webcam`}
+          alt="Webcam Feed"
+          style={{ width: '450px', height: 'auto', borderRadius: '10px' }}
         />
-        <div
-          style={{
-            animation: 'smile 6s 0.1s infinite',
-            background: 'linear-gradient(to top, #efefef, #efefef 50%, #000 50%, #000)',
-            backgroundPosition: '0 0',
-            backgroundSize: '200% 200%',
-            borderRadius: '50%',
-            position: 'absolute',
-            width: '12em',
-            height: '12em',
-            right: '-9em',
-            top: '-6em',
-            transform: 'skewX(4deg)',
-          }}
-        />
+      </div>
+    )}
+    <div
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'rgba(255, 255, 255, 0.1)',
+        backdropFilter: 'blur(15px)',
+        WebkitBackdropFilter: 'blur(15px)',
+        padding: '40px',
+        borderRadius: '20px',
+        width: '90%',
+        maxWidth: '520px',
+        color: 'white',
+        fontFamily: '"Baloo", sans-serif',
+        textAlign: 'center',
+        zIndex: 0,
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.2)',
+        transition: 'all 0.5s ease',
+      }}
+    >
+      <h1
+        style={{
+          fontSize: '32px',
+          marginBottom: '20px',
+          background: 'linear-gradient(to bottom, #8496FF, #8873FF)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+        }}
+        >
+        Doze
+      </h1>
+      
+      <div
+        style={{
+          opacity: isTracking ? 0 : 1,
+          transition: 'opacity 0.5s ease',
+          pointerEvents: isTracking ? 'none' : 'auto',
+        }}
+        >
+          <p>
+            Doze watches for signs of drowsiness using your webcam. You'll be
+            alerted if you appear sleepy.
+          </p>
+          <p>Use this while studying, working, or driving long hours.</p>
+          <p>Please allow camera access. No data is stored or uploaded.</p>
 
-        {isTracking && (
-          <div
-            style={{
-              position: 'absolute',
-              bottom: '-400px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              boxShadow: '0 0 20px rgba(169, 169, 169, 0)',
-              filter: 'drop-shadow(0 0 10px rgba(169, 169, 169, 0.8))',
-              transition: 'all 1s ease',
+          <Button
+            onClick={toggleTracking}
+            variant="solid"
+            sx={{
+              fontSize: '18px',
+              marginTop: '20px',
+              padding: '10px 20px',
+              backgroundColor: 'white',
+              // fontWeight: 'bold',
+              '&:hover': {
+                backgroundColor: '#e6e8ff', // light purpleish background on hover
+              },
+              cursor: 'pointer',
             }}
           >
-            <img
-              src={`${apiUrl}/webcam`}
-              alt=""
-              style={{ width: '450px', height: 'auto', borderRadius: '10px' }}
-            />
+            <span
+              style={{
+                background: 'linear-gradient(to bottom, #8496FF, #8873FF)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                width: '100%',
+              }}
+            >
+              Start Tracking
+            </span>
+          </Button>
+
+          <div style={{ marginTop: '15px' }}>
+            <Button
+              variant="plain"
+              sx={{
+                background: 'linear-gradient(to bottom, #8496FF, #8873FF)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                padding: 0,
+                minWidth: 'auto',
+              }}
+              onClick={() =>
+                window.open(
+                  'mailto:veerajhuti@gmail.com?subject=Feedback for Doze',
+                  '_blank'
+                )
+              }
+            >
+              Feedback / Questions
+            </Button>
           </div>
+        </div>
+
+        {isTracking && (
+          <Button
+            onClick={toggleTracking}
+            variant="solid"
+            color="danger"
+            sx={{
+              fontSize: '18px',
+              marginTop: '20px',
+              padding: '10px 20px',
+            }}
+          >
+            Stop Tracking
+          </Button>
         )}
       </div>
-      <ChipButton isTracking={isTracking} toggleTracking={toggleTracking} />
     </div>
   );
 }
