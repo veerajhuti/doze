@@ -5,7 +5,7 @@ import Button from '@mui/joy/Button';
 function App() {
 
   const [isTracking, setIsTracking] = useState(false);
-  const apiUrl = 'http://localhost:4000';
+  const apiUrl = 'http://backend:4000';
   
   const alarm_sound = React.useMemo(() =>
     new Audio(process.env.PUBLIC_URL + "/alarm-clock-short-6402.mp3"), 
@@ -51,7 +51,7 @@ function App() {
           console.log('Drowsiness data:', data.is_drowsy);
           if (data.is_drowsy) {
             alarm_sound.play();
-            toast.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 5000);
+            toast.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 4000);
           }
         })
         .catch(error => {

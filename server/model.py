@@ -1,3 +1,4 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -7,13 +8,16 @@ from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import datasets, transforms
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 transform = transforms.Compose([
   transforms.Resize((28, 28)),
   transforms.ToTensor(),
   transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
 ])
 
-dataset = datasets.ImageFolder(root="data/drowsiness-dataset/train", transform=transform) # assumes that each subfolder is a class
+dataset_root = os.path.join(BASE_DIR, "data/drowsiness-dataset/train")
+dataset = datasets.ImageFolder(root=dataset_root, transform=transform)
 
 train_N = int(0.8 * len(dataset))
 valid_N = len(dataset) - train_N
@@ -177,6 +181,7 @@ if __name__ == "__main__":
   train_accuracies, valid_accuracies = [], [] 
 
   best_val_acc = 0.0
+  best_model_path = os.path.join(BASE_DIR, 'best_model.pth')
 
   for epoch in range(epochs):
     print('Epoch: {}'.format(epoch))
@@ -190,6 +195,6 @@ if __name__ == "__main__":
 
     if valid_acc > best_val_acc:
       best_val_acc = valid_acc
-      torch.save(model.state_dict(), 'best_model.pth')
+      torch.save(model.state_dict(), best_model_path)
     
   plot(train_accuracies, valid_accuracies, train_losses, valid_losses)

@@ -1,5 +1,6 @@
-from flask import Flask, Response, jsonify
-from flask_cors import CORS, cross_origin
+# from flask import Flask, Response, jsonify
+# from flask_cors import CORS, cross_origin
+import os
 import cv2 as cv
 import numpy as np
 import dlib
@@ -10,14 +11,27 @@ from imutils import face_utils
 from model import NeuralNetwork
 from torchvision import transforms
 from PIL import Image
+from fastapi import FastAPI, Response
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI()
+
+app.add_middleware(
+  CORSMiddleware,
+  allow_origins=["*"],
+  allow_credentials=True,
+  allow_methods=["*"],
+  allow_headers=["*"],
+)
 
 # model
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+model_path = os.path.join(BASE_DIR, 'best_model.pth')
 model = NeuralNetwork()
-model.load_state_dict(torch.load('best_model.pth'))
+model.load_state_dict(torch.load(model_path))
 model.eval()
 
 transform = transforms.Compose([ # transform the live feed data
@@ -28,12 +42,17 @@ transform = transforms.Compose([ # transform the live feed data
 
 # global variables
 
+landmark_path = os.path.join(BASE_DIR, 'shape_predictor_68_face_landmarks.dat')
+if not os.path.exists(landmark_path):
+  raise FileNotFoundError(f"Landmark file not found at {landmark_path}")
+facial_landmark_detector = dlib.shape_predictor(landmark_path)
+
 is_tracking = False
 live_video = None
 is_drowsy = False
 # duration = 0
 facial_feature_detector = dlib.get_frontal_face_detector()
-facial_landmark_detector = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
+# facial_landmark_detector = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 ear_threshold = 0.18
 duration_threshold = 47
 ear_consec_frames = 15  # how many frames in a row indicates drowsiness
@@ -191,22 +210,26 @@ def webcam_display():
     live_video.release()
     live_video = None
           
-@app.route('/webcam')
+@app.get("/")
+def read_root():
+    return {"message": "API is running"}
+
+@app.get('/webcam')
 def start_tracking():
     global is_tracking
     is_tracking = True
-    return Response(webcam_display(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    return StreamingResponse(webcam_display(), media_type='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/stop_webcam')
+@app.get('/stop_webcam')
 def stop_tracking():
     global is_tracking
     is_tracking = False
-    return jsonify({"status": "stopped"})
+    return JSONResponse(content={"status": "Webcam Stopped"})
 
-@app.route('/check_drowsiness')
+@app.get('/check_drowsiness')
 def check_drowsiness():
     global is_drowsy
-    return jsonify({"is_drowsy": is_drowsy})
+    return JSONResponse(content={"is_drowsy": is_drowsy})
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=4000, debug=True)
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=4000, debug=True)
