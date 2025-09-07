@@ -1,64 +1,130 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import Button from '@mui/joy/Button';
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
 
   const [isTracking, setIsTracking] = useState(false);
   const apiUrl = 'http://backend:4000';
-  
-  const alarm_sound = React.useMemo(() =>
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+
+  const alarm = React.useMemo(() =>
     new Audio(process.env.PUBLIC_URL + "/alarm-clock-short-6402.mp3"), 
   [] );
 
   useEffect(() => {
-    if (isTracking) {
-      fetch(`${apiUrl}/webcam`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch(error => {
-        console.error('Error fetching webcam data:', error);
-      });
-    } else {
-      fetch(`${apiUrl}/stop_webcam`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).catch(error => {
-        console.error('Error stopping webcam:', error);
-      });
-    }
-  }, [isTracking, apiUrl]);
-
-  useEffect(() => {
-    if (isTracking) {
-      fetch(`${apiUrl}/check_drowsiness`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+  if (isTracking) {
+    navigator.mediaDevices
+      .getUserMedia({ video: true })
+      .then((stream) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
       })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Drowsiness data:', data.is_drowsy);
+      .catch((err) => {
+        console.error("Error accessing webcam:", err);
+        toast.error("Could not access webcam.");
+        setIsTracking(false);
+      });
+  } else {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
+    }
+  }
+}, [isTracking]);
+
+useEffect(() => {
+  let intervalId;
+
+  if (isTracking) {
+    intervalId = setInterval(() => {
+      if (!videoRef.current || !canvasRef.current) return;
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext("2d");
+
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageDataUrl = canvas.toDataURL("image/jpeg");
+
+      fetch(`${apiUrl}/predict`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: imageDataUrl }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          console.log("Drowsiness prediction:", data);
           if (data.is_drowsy) {
-            alarm_sound.play();
-            toast.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 4000);
+            alarm.play().catch(() => {
+              // Handle autoplay block on some browsers
+            });
+            toast.error("You seem drowsy. Please take a break.", {
+              autoClose: 4000,
+            });
           }
         })
-        .catch(error => {
-          console.error('Error fetching webcam data:', error);
+        .catch((err) => {
+          console.error("Prediction error:", err);
         });
-      }
-}, [isTracking, apiUrl, alarm_sound]);  
+    }, 1000);
+  }
+
+  return () => clearInterval(intervalId);
+}, [isTracking, apiUrl, alarm]);
+
+  // old for local dev
+    // useEffect(() => {
+    //   if (isTracking) {
+    //     fetch(`${apiUrl}/webcam`, {
+    //       method: 'GET',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //     }).catch(error => {
+    //       console.error('Error fetching webcam data:', error);
+    //     });
+    //   } else {
+    //     fetch(`${apiUrl}/stop_webcam`, {
+    //       method: 'GET',
+    //       headers: {
+    //         'Content-Type': 'application/json',
+    //       },
+    //     }).catch(error => {
+    //       console.error('Error stopping webcam:', error);
+    //     });
+    //   }
+    // }, [isTracking, apiUrl]);
+
+    //   useEffect(() => {
+    //     if (isTracking) {
+    //       fetch(`${apiUrl}/check_drowsiness`, {
+    //         method: 'GET',
+    //         headers: {
+    //           'Content-Type': 'application/json',
+    //         },
+    //       })
+    //         .then(response => {
+    //           if (!response.ok) {
+    //             throw new Error('Network response was not ok');
+    //           }
+    //           return response.json();
+    //         })
+    //         .then(data => {
+    //           console.log('Drowsiness data:', data.is_drowsy);
+    //           if (data.is_drowsy) {
+    //             alarm.play();
+    //             toast.error('You seem drowsy. Please take a break.', 'Drowsiness Alert', 4000);
+    //           }
+    //         })
+    //         .catch(error => {
+    //           console.error('Error fetching webcam data:', error);
+    //         });
+    //       }
+    // }, [isTracking, apiUrl, alarm]);  
 
   const toggleTracking = () => {
     setIsTracking(!isTracking);
