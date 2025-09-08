@@ -19,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
     # from flask_cors import CORS, cross_origin
 
 torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
 
 app = FastAPI()
 
@@ -274,3 +275,8 @@ async def predict_route(request: Request):
 
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=4000, debug=True)
+
+if __name__ == "__main__":
+  import uvicorn
+  port = int(os.environ.get("PORT", 4000))
+  uvicorn.run("server:app", host="0.0.0.0", port=port)

@@ -6,7 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 function App() {
 
   const [isTracking, setIsTracking] = useState(false);
-  const apiUrl = 'http://backend:4000';
+  const apiUrl = 'https://docker-server-xdlv.onrender.com';
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
@@ -170,10 +170,23 @@ useEffect(() => {
           height: 'auto',
         }}
       >
-        <img
+        {/* <img
           src={`${apiUrl}/webcam`}
           alt="Webcam Feed"
           style={{ width: '450px', height: 'auto', borderRadius: '10px' }}
+        /> */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          style={{ width: '450px', borderRadius: '10px' }}
+        />
+        <canvas
+          ref={canvasRef}
+          width={450}
+          height={300}
+          style={{ display: 'none' }}
         />
       </div>
     )}
