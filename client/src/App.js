@@ -126,7 +126,22 @@ useEffect(() => {
     //       }
     // }, [isTracking, apiUrl, alarm]);  
 
+  const stopWebcam = () => {
+    if (videoRef.current) {
+      const stream = videoRef.current.srcObject;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      videoRef.current.srcObject = null;
+      videoRef.current.pause();
+      videoRef.current.load();
+    }
+  };
+
   const toggleTracking = () => {
+    if (isTracking) {
+      stopWebcam();
+    }
     setIsTracking(!isTracking);
   };
 
@@ -166,7 +181,7 @@ useEffect(() => {
           filter: 'drop-shadow(0 0 10px rgba(169, 169, 169, 0.8))',
           borderRadius: '10px',
           zIndex: 20,
-          width: '450px',
+          width: '350px',
           height: 'auto',
         }}
       >
@@ -180,7 +195,7 @@ useEffect(() => {
           autoPlay
           muted
           playsInline
-          style={{ width: '450px', borderRadius: '10px' }}
+          style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
         />
         <canvas
           ref={canvasRef}
