@@ -14,6 +14,8 @@ from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
+VERSION = "2026-06-27-1"
+
 # not using flask anymore, but here for ref
     # from flask import Flask, Response, jsonify
     # from flask_cors import CORS, cross_origin
@@ -135,7 +137,10 @@ def predict(face):
       
 @app.get("/")
 def read_root():
-  return {"message": "API is running"}
+  return {
+    "message": "API is running",
+    "version": VERSION
+  }
 
 @app.post("/predict")
 async def predict_route(request: Request):
