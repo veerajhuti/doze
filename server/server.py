@@ -16,10 +16,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 VERSION = "2026-06-27-1"
 
-# not using flask anymore, but here for ref
-    # from flask import Flask, Response, jsonify
-    # from flask_cors import CORS, cross_origin
-
 torch.set_num_threads(1)
 torch.set_num_interop_threads(1)
 
@@ -104,36 +100,6 @@ def predict(face):
     print("Error in prediction:", e)
   return -1, 0.0
 
-
-      # old logic
-      
-      # for face in faces:
-      #   landmarks = facial_landmark_detector(gray, face)
-      #   landmarks = face_utils.shape_to_np(landmarks)
-
-      #   (x, y, w, h) = face_utils.rect_to_bb(face)
-      #   cv.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
-
-      #   for (x, y) in landmarks:
-      #     cv.circle(frame, (x, y), 1, (0, 0, 255), -1)
-        
-      #   if len(landmarks) > 0:
-      #     left_eye = landmarks[42:48]
-      #     right_eye = landmarks[36:42]
-  
-      #     left_ear = eye_aspect_ratio(left_eye)
-      #     right_ear = eye_aspect_ratio(right_eye)
-          
-      #     ear = (left_ear + right_ear) / 2.0
-
-      #     if ear < ear_threshold:
-      #       duration += 1
-      #     else:
-      #       duration = 0
-
-      #     if duration > duration_threshold:
-      #       is_drowsy = True
-      
 @app.get("/")
 def read_root():
   return {
@@ -148,12 +114,6 @@ async def predict_route(request: Request):
   Returns: { "is_drowsy": bool, "confidence": float }
   """
 
-# def webcam_display():
-#   global live_video, is_tracking, is_drowsy
-
-#   if live_video is None:
-#     live_video = cv.VideoCapture(0)
-
   global ear_counter, model_drowsy_score, last_reading
 
   prediction_interval = 0.5  # seconds between predictions
@@ -162,14 +122,7 @@ async def predict_route(request: Request):
   model_drowsy_increase = 3
   model_drowsy_decrease = 5
   model_drowsy_threshold = 10
-
-#   while is_tracking:
-#     ret, frame = live_video.read()
-#     if not ret:
-#       break
-
-#     gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-#     faces = facial_feature_detector(gray, 0)
+  
   current_reading = time.time()
 
   data = await request.json()
@@ -237,8 +190,7 @@ async def predict_route(request: Request):
       
     ear_dec = ear_counter >= ear_consec_frames
     
-    # prediction
-    # classes: 0=closed, 1=no_yawn, 2=open, 3=yawn  →  0 and 3 are drowsy states
+    # CLASSES: 0=closed, 1=no_yawn, 2=open, 3=yawn  →  0 and 3 are drowsy states
     if prediction == 0 and confidence > 0.65:
       if ear < ear_threshold:
         model_drowsy_score += model_drowsy_increase  # closed + low EAR = confident drowsy
@@ -263,40 +215,8 @@ async def predict_route(request: Request):
     
     cv.rectangle(frame, (x, y), (x + w, y + h), color, 2)
     cv.putText(frame, label, (x, y-10), cv.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255) if is_drowsy else (0, 255, 0), 2)
-
-    # ret, jpeg = cv.imencode('.jpg', frame)
-    # if ret:
-    #   frame_bytes = jpeg.tobytes()
-    #   yield (b'--frame\r\n'b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
-    # else:
-    #   yield b'--frame\r\nContent-Type: image/jpeg\r\n\r\n'  # empty frame  
-  
-  # if live_video is not None:
-  #   live_video.release()
-  #   live_video = None
           
   return {"is_drowsy": is_drowsy, "confidence": confidence}
-
-
-# @app.get('/webcam')
-# def start_tracking():
-#     global is_tracking
-#     is_tracking = True
-#     return StreamingResponse(webcam_display(), media_type='multipart/x-mixed-replace; boundary=frame')
-
-# @app.get('/stop_webcam')
-# def stop_tracking():
-#     global is_tracking
-#     is_tracking = False
-#     return JSONResponse(content={"status": "Webcam Stopped"})
-
-# @app.get('/check_drowsiness')
-# def check_drowsiness():
-#     global is_drowsy
-#     return JSONResponse(content={"is_drowsy": is_drowsy})
-
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=4000, debug=True)
 
 # LOCAL
 # if __name__ == "__main__":
