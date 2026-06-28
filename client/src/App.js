@@ -7,8 +7,11 @@ function App() {
 
   const [isTracking, setIsTracking] = useState(false);
   const apiUrl = 'https://docker-server-xdlv.onrender.com';
+  // for testing
+  // const apiUrl = 'http://localhost:4000';
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const lastAlertRef = useRef(0); // timestamp of last drowsiness alert
 
   const alarm = React.useMemo(() =>
     new Audio(process.env.PUBLIC_URL + "/alarm-clock-short-6402.mp3"), 
@@ -58,9 +61,11 @@ useEffect(() => {
         .then((res) => res.json())
         .then((data) => {
           console.log("Drowsiness prediction:", data);
-          if (data.is_drowsy) {
+          const now = Date.now();
+          if (data.is_drowsy && now - lastAlertRef.current > 5000) {
+            lastAlertRef.current = now;
             alarm.play().catch(() => {
-              // Handle autoplay block on some browsers
+              // handle autoplay block on some browsers
             });
             toast.error("You seem drowsy. Please take a break.", {
               autoClose: 4000,

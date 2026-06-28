@@ -62,7 +62,10 @@ live_video = None
 is_drowsy = False
 duration_threshold = 47
 ear_consec_frames = 15  # how many frames in a row indicates drowsiness
-ear_counter = 0  # frame counter
+
+ear_counter = 0         # frame counter
+model_drowsy_score = 0  # accumulated drowsiness score
+last_reading = 0        # timestamp of last ML inference
 # duration = 0
 
 # new face/eye detector
@@ -147,10 +150,9 @@ async def predict_route(request: Request):
 #   if live_video is None:
 #     live_video = cv.VideoCapture(0)
 
-  last_reading = 0
+  global ear_counter, model_drowsy_score, last_reading
+
   prediction_interval = 0.5  # seconds between predictions
-  ear_counter = 0
-  model_drowsy_score = 0
   model_drowsy_max = 15
   model_drowsy_min = 0
   model_drowsy_increase = 3
@@ -199,6 +201,8 @@ async def predict_route(request: Request):
 
     if current_reading - last_reading > prediction_interval:
       prediction, confidence = predict(crop_resized)
+      print("Prediction:", prediction)
+      print("Confidence:", confidence)
       last_reading = current_reading
     else:
       prediction, confidence = -1, 0.0
@@ -224,15 +228,18 @@ async def predict_route(request: Request):
     ear_dec = ear_counter >= ear_consec_frames
     
     # prediction
+    # classes: 0=closed, 1=no_yawn, 2=open, 3=yawn  →  0 and 3 are drowsy states
     if prediction in [0, 3] and confidence > 0.3:
       model_drowsy_score += model_drowsy_increase
-    elif confidence < 0.4:
-      model_drowsy_score += 1
+    elif prediction in [1, 2] and confidence > 0.4:
+      # confident awake prediction — decrease quickly
+      model_drowsy_score -= model_drowsy_decrease
     else:
+      # uncertain — decay slowly
       model_drowsy_score -= 1
 
     model_drowsy_score = max(model_drowsy_min, min(model_drowsy_score, model_drowsy_max))
-    # print(f"Prediction: {prediction}, Confidence: {confidence:.2f}, Score: {model_drowsy_score}")
+    print(f"Prediction: {prediction}, Confidence: {confidence:.2f}, EAR: {ear:.2f}, Score: {model_drowsy_score}/{model_drowsy_threshold}, EAR_frames: {ear_counter}/{ear_consec_frames}")
 
     model_dec = model_drowsy_score >= model_drowsy_threshold
     is_drowsy = model_dec or ear_dec
@@ -278,5 +285,9 @@ async def predict_route(request: Request):
 
 if __name__ == "__main__":
   import uvicorn
-  port = int(os.environ.get("PORT", 4000))
-  uvicorn.run("server:app", host="0.0.0.0", port=port)
+  uvicorn.run(app, host="0.0.0.0", port=4000)
+    
+# if __name__ == "__main__":
+#   import uvicorn
+#   port = int(os.environ.get("PORT", 4000))
+#   uvicorn.run("server:app", host="0.0.0.0", port=port)

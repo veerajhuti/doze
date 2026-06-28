@@ -1,9 +1,12 @@
 import os
+import sys
+import csv
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
 import matplotlib.pyplot as plt
+from datetime import datetime
 from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import datasets, transforms
@@ -37,6 +40,20 @@ n_classes = 4
 kernel_size = 3
 flattened_img_size = 75 * 3 * 3
 
+class Logger:
+  def __init__(self):
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    self.terminal = sys.stdout
+    self.log = open(f"training_{timestamp}.log", "w")
+
+  def write(self, message):
+    self.terminal.write(message)
+    self.log.write(message)
+
+  def flush(self):
+    self.terminal.flush()
+    self.log.flush()
+      
 class NeuralNetwork(nn.Module):
   def __init__(self):
     super().__init__()
@@ -175,8 +192,7 @@ def plot(train_accuracies, valid_accuracies, train_losses, valid_losses):
 # main training loop
 
 if __name__ == "__main__":
-  model = NeuralNetwork()
-
+  sys.stdout = Logger()
   train_losses, valid_losses = [], []
   train_accuracies, valid_accuracies = [], [] 
 
