@@ -31,6 +31,7 @@ train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 valid_loader = DataLoader(val_dataset, batch_size=32)
 
 print(dataset.class_to_idx)
+print(train_dataset.classes)
 batch = next(iter(train_loader))
 batch
 batch[0].shape # 32 28x28 graph papers, 3 colour channels (0-255)

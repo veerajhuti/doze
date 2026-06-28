@@ -1,4 +1,6 @@
+.DS_store
 server/shape_predictor_68_face_landmarks.dat
 venv/
 /node_modules
 /server/__pycache__
+*.log
