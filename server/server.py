@@ -57,7 +57,6 @@ facial_feature_detector = dlib.get_frontal_face_detector()
 
 ear_threshold = 0.18
 
-
 # facial_landmark_detector = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 is_tracking = False
 live_video = None
@@ -203,7 +202,12 @@ async def predict_route(request: Request):
     # cv.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
     crop = frame[y: y+h, x: x+w]
     crop_resized = cv.resize(crop, (128, 128))  # match training resolution
-
+    
+    # os.makedirs("debug_eyes", exist_ok=True)
+    # timestamp = int(time.time() * 1000)
+    # cv.imwrite(f"debug_eyes/{timestamp}_face.jpg", crop)
+    # cv.imwrite(f"debug_eyes/{timestamp}_face_128.jpg", crop_resized)
+    
     if current_reading - last_reading > prediction_interval:
       prediction, confidence = predict(crop_resized)
       print("Prediction:", prediction)
@@ -221,6 +225,7 @@ async def predict_route(request: Request):
     right_ear = eye_aspect_ratio(right_eye)
     
     ear = (left_ear + right_ear) / 2.0
+    print(f"EAR: {ear:.3f}")
     
     for (x_pt, y_pt) in np.concatenate((left_eye, right_eye), axis=0):
       cv.circle(frame, (x_pt, y_pt), 1, (0, 0, 255), -1)
@@ -234,19 +239,24 @@ async def predict_route(request: Request):
     
     # prediction
     # classes: 0=closed, 1=no_yawn, 2=open, 3=yawn  →  0 and 3 are drowsy states
-    if prediction in [0, 3] and confidence > 0.3:
-      model_drowsy_score += model_drowsy_increase
-    elif prediction in [1, 2] and confidence > 0.4:
-      # confident awake prediction — decrease quickly
+    if prediction == 0 and confidence > 0.65:
+      if ear < ear_threshold:
+        model_drowsy_score += model_drowsy_increase  # closed + low EAR = confident drowsy
+      else:
+        model_drowsy_score -= 1  # model says closed but eyes look open
+    elif prediction == 2 and confidence > 0.6:
+      model_drowsy_score -= model_drowsy_decrease
+    elif prediction == 1 and confidence > 0.6:  # no_yawn = clearly awake
       model_drowsy_score -= model_drowsy_decrease
     else:
-      # uncertain — decay slowly
       model_drowsy_score -= 1
 
     model_drowsy_score = max(model_drowsy_min, min(model_drowsy_score, model_drowsy_max))
     print(f"Prediction: {prediction}, Confidence: {confidence:.2f}, EAR: {ear:.2f}, Score: {model_drowsy_score}/{model_drowsy_threshold}, EAR_frames: {ear_counter}/{ear_consec_frames}")
 
     model_dec = model_drowsy_score >= model_drowsy_threshold
+    if model_dec:
+      model_drowsy_score = model_drowsy_threshold // 2
     is_drowsy = model_dec or ear_dec
     label = f"{'Drowsy' if is_drowsy else 'Awake'} ({confidence*100:.1f}%)"
     color = (0, 0, 255) if is_drowsy else (0, 255, 0)
@@ -288,11 +298,12 @@ async def predict_route(request: Request):
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=4000, debug=True)
 
-if __name__ == "__main__":
-  import uvicorn
-  uvicorn.run(app, host="0.0.0.0", port=4000)
-    
+# LOCAL
 # if __name__ == "__main__":
 #   import uvicorn
-#   port = int(os.environ.get("PORT", 4000))
-#   uvicorn.run("server:app", host="0.0.0.0", port=port)
+#   uvicorn.run(app, host="0.0.0.0", port=4000)
+    
+if __name__ == "__main__":
+  import uvicorn
+  port = int(os.environ.get("PORT", 4000))
+  uvicorn.run("server:app", host="0.0.0.0", port=port)
