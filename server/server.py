@@ -161,13 +161,10 @@ async def predict_route(request: Request):
     # cv.imwrite(f"debug_eyes/{timestamp}_face.jpg", crop)
     # cv.imwrite(f"debug_eyes/{timestamp}_face_128.jpg", crop_resized)
     
-    if current_reading - last_reading > prediction_interval:
-      prediction, confidence = predict(crop_resized)
-      print("Prediction:", prediction)
-      print("Confidence:", confidence)
-      last_reading = current_reading
-    else:
-      prediction, confidence = -1, 0.0
+    prediction, confidence = predict(crop_resized)
+    print("Prediction:", prediction)
+    print("Confidence:", confidence)
+    last_reading = current_reading
   
     landmarks = facial_landmark_detector(gray, face)
     landmarks = face_utils.shape_to_np(landmarks)
