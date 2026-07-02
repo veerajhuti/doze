@@ -219,11 +219,11 @@ async def predict_route(request: Request):
   return {"is_drowsy": is_drowsy, "confidence": confidence}
 
 # LOCAL
-if __name__ == "__main__":
-  import uvicorn
-  uvicorn.run(app, host="0.0.0.0", port=4000)
-    
 # if __name__ == "__main__":
 #   import uvicorn
-#   port = int(os.environ.get("PORT", 4000))
-#   uvicorn.run("server:app", host="0.0.0.0", port=port)
+#   uvicorn.run(app, host="0.0.0.0", port=4000)
+    
+if __name__ == "__main__":
+  import uvicorn
+  port = int(os.environ.get("PORT", 4000))
+  uvicorn.run("server:app", host="0.0.0.0", port=port)

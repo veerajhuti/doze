@@ -5,9 +5,9 @@ import "react-toastify/dist/ReactToastify.css";
 
 function Vanilla({ onStartSim }) {
   const [isTracking, setIsTracking] = useState(false);
-  // const apiUrl = 'https://docker-server-xdlv.onrender.com';
+  const apiUrl = 'https://docker-server-xdlv.onrender.com';
   // for testing
-  const apiUrl = 'http://localhost:4000';
+  // const apiUrl = 'http://localhost:4000';
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const lastAlertRef = useRef(0); // timestamp of last drowsiness alert
