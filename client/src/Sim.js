@@ -110,7 +110,7 @@ function Sim({ onExit }) {
     // each vertex is 3 floats (x,y,z), not normalized, 0 stride (space btwn -> tightly packed)
     gl.vertexAttribPointer(positionLocation, 3, gl.FLOAT, false, 0, 0);
 
-    gl.clearColor(0, 0, 0, 1); // set clear colour
+    gl.clearColor(0.05, 0.06, 0.10, 1); // set clear colour
     gl.clear(gl.COLOR_BUFFER_BIT); // clear screen
 
     // gl.drawArrays(gl.TRIANGLES, 0, 3); // static
@@ -160,17 +160,97 @@ function Sim({ onExit }) {
   }, []);
 
   return (
-    <>
-      <Button onClick={onExit}>
-        ← Back to Doze
-      </Button>
-
-      <canvas
-        ref={canvasRef}
-        width={1640}
-        height={1040}
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        overflow: "hidden",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#0b0c14",
+      }}
+    >
+      {/* blurred background */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "rgba(10, 10, 20, 0.6)",
+          backdropFilter: "blur(12px)",
+        }}
       />
-    </>
+
+      {/* back button */}
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 10,
+        }}
+      >
+        <Button
+          onClick={onExit}
+          style={{
+            background: "linear-gradient(to bottom, #8496FF, #8873FF)",
+            border: "none",
+            color: "white",
+            padding: "8px 12px",
+            borderRadius: 8,
+          }}
+        >
+          ← Back
+        </Button>
+      </div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          zIndex: 10,
+          width: 180,
+          padding: "10px 12px",
+          borderRadius: "12px",
+          background: "",
+          border: "1px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(10px)",
+          color: "rgba(255,255,255,0.85)",
+          fontFamily: '"Baloo", sans-serif',
+          fontSize: "13px",
+          lineHeight: 1.4,
+        }}
+      >
+        *Detector webcam here*
+      </div>
+
+      {/* sim window */}
+      <div
+        style={{
+          width: "min(900px, 90vw)",
+          height: "min(600px, 70vh)",
+          borderRadius: "16px",
+          overflow: "hidden",
+          background: "linear-gradient(to bottom, #8496FF, #8873FF)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+          zIndex: 5,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "block",
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
